@@ -4,7 +4,7 @@ Computer Graphics with WebGL - Lighting
 Camera:
 Hold c to move camera alongside up,down,left,right arrows |                                                                                                                                   
 Default selected object: teapot |
-Default movement by up,down,left,right arrows |
+Default movement by up,down,left,right arrows + point and comma for movement on z axis|
 Local Transformations:
 x,X | y,Y | z,Z for uniform scaling |
 q,w,e,d,s,a for rotation around x,y,z axes |
