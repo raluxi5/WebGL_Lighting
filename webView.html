@@ -1,0 +1,148 @@
+<html>
+
+    <!------------------Gouraud Shading--------------------------->
+    <!------------------Vertex Shading--------------------------->
+    <script id="Gvertex-shader" type="x-shader/x-vertex">
+
+        attribute  vec3 vPosition; //vector coordinates of objects
+        attribute  vec3 vNormal;   //vector normals of objects
+
+        uniform mat4 modelviewprojMatrix; //combination of model/view/projection matrix for object position
+        uniform mat4 modelViewMatrix;     //object's view and transformations matrix
+        uniform mat3 normalMatrix;        //matrix of normals
+
+        //Lighting components
+        uniform vec4 lightPosition; //position of point light-source in eye coordinates
+        uniform vec4 Iambient;   //ambient light
+        uniform vec4 Idiffuse;   //diffuse light
+        uniform vec4 Ispecular;  //specular light
+        uniform float shiny;     //material shininess for specular highlight
+
+        varying vec4 fColor; //color for the fragment shader
+
+        void main()
+        {
+             vec3 posToLight = vec3(modelViewMatrix * vec4(vPosition,1.0)); //object position to point light-source
+
+             //Phong illumination model with the 4 vectors N,L,E,R to compute lighting equation
+             vec3 N = vec3( normalMatrix * vNormal);              //normal on plane
+             vec3 L = normalize(lightPosition.xyz - posToLight); //direction of light vector - for point light-source
+             vec3 E = normalize( -posToLight );                  //from where the viewer looks, eyes
+             vec3 R = normalize(-reflect(L,N));                             //reflected light
+
+             //Light components
+             //calculate Ambient Term:
+             vec4 ambient = Iambient; //constant value
+
+             //calculate Diffuse Term:
+             float diffuseCoeff = max( dot(L, N), 0.0 ); //material diffuse coeff
+             vec4  diffuse = diffuseCoeff * Idiffuse; //full diffuse light
+
+             //calculate Specular Term:
+             float specularCoeff = pow( max(dot(E,R), 0.0), shiny ); //material specular coeff
+             vec4  specular = specularCoeff * Ispecular; //full specular light
+
+             gl_Position = modelviewprojMatrix  * vec4(vPosition,1.0);
+
+             fColor = (ambient + diffuse + specular) * vec4(0.7, 0.7, 0.7,1);
+
+        }
+
+    </script>
+
+    <script id="Gfragment-shader" type="x-shader/x-fragment">
+
+        precision mediump float;
+        varying vec4 fColor;
+
+        void main()
+        {
+            gl_FragColor = fColor;
+        }
+
+    </script>
+
+    <!------------------Phong Shading--------------------------->
+    <!------------------Pixel Shading--------------------------->
+    <script id="Pvertex-shader" type="x-shader/x-vertex">
+
+        attribute  vec3 vPosition; //vector coordinates of objects
+        attribute  vec3 vNormal;   //vector normals of objects
+
+        uniform mat4 modelviewprojMatrix; //combination of model/view/projection matrix for object position
+        uniform mat4 modelViewMatrix;     //object's view and transformations matrix
+        uniform mat3 normalMatrix;        //matrix of normals
+
+        varying vec3 N; //normal vector on plane to be passed to the fragment-shader
+        varying vec3 posToLight; //object position to point light-source to be passed to the fragment-shader
+
+        void main()
+        {
+
+             posToLight = vec3(modelViewMatrix * vec4(vPosition,1.0)); //object position to point light-source
+             N = vec3( normalMatrix * vNormal); //normal on plane
+
+             gl_Position = modelviewprojMatrix  * vec4(vPosition,1.0);
+
+        }
+
+    </script>
+
+    <script id="Pfragment-shader" type="x-shader/x-fragment">
+
+        precision mediump float;
+
+        varying vec3 N; //from vertex-shader
+        varying vec3 posToLight; //from vertex-shader
+
+        //Lighting components
+        uniform vec4 lightPosition; //position of point light-source in eye coordinates
+        uniform vec4 Iambient;   //ambient light
+        uniform vec4 Idiffuse;   //diffuse light
+        uniform vec4 Ispecular;  //specular light
+        uniform float shiny;     //material shininess for specular highlight
+
+        void main()
+        {
+            //Phong illumination model with the 4 vectors N,L,E,R to compute lighting equation
+            vec3 L = normalize(lightPosition.xyz - posToLight); //direction of light vector - for point light-source
+            vec3 E = normalize( -posToLight );                  //from where the viewer looks, eyes
+            vec3 R = normalize(-reflect(L,N));                             //reflected light
+
+            //Light components
+            //calculate Ambient Term:
+            vec4 ambient = Iambient; //constant value
+
+            //calculate Diffuse Term:
+            float diffuseCoeff = max( dot(L, N), 0.0 ); //material diffuse coeff
+            vec4  diffuse = diffuseCoeff * Idiffuse; //full diffuse light
+
+            // calculate Specular Term:
+            float specularCoeff; //material specular coeff
+            vec4  specular;      //full specular light
+            //specular light is from the light source, not the object
+            if(dot(E,R) > 0.0){
+                specularCoeff = pow( max(dot(E,R), 0.0), shiny );
+                specular = specularCoeff * Ispecular;
+            }
+
+            gl_FragColor = (ambient + diffuse + specular) * vec4(0.7, 0.7, 0.7,1);
+        }
+
+    </script>
+
+    <script type="text/javascript" src="gl-matrix-min.js"></script>
+    <script type="text/javascript" src="main.js"></script>
+    <script type="text/javascript" src="webgl-utils.js"></script>
+    <script type="text/javascript" src="shaderProgram.js"></script>
+    <script type="text/javascript" src="objFiles.js"></script>
+
+
+<body>
+<canvas id="gl-canvas" width="1200" height="750">
+    Oops ... your browser doesn't support the HTML5 canvas element
+</canvas>
+
+
+</body>
+</html>
